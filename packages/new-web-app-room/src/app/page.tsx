@@ -80,8 +80,12 @@ export default function Calculator() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 flex items-center justify-center p-4">
-      <div className="bg-gray-900 rounded-2xl shadow-2xl p-6 w-full max-w-sm">
+    <div className="min-h-screen relative flex items-center justify-center p-4">
+      {/* Animated Orange Grid Background Layers */}
+      <div className="fixed inset-0 bg-orange-grid"></div>
+      <div className="fixed inset-0 bg-orange-grid-overlay"></div>
+      <div className="fixed inset-0 bg-orange-grid-particles"></div>
+      <div className="relative z-10 bg-gray-900/90 backdrop-blur-sm rounded-2xl shadow-2xl p-6 w-full max-w-sm border border-orange-500/20">
         <h1 className="text-white text-2xl font-bold text-center mb-6">Calculator</h1>
         
         {/* Display */}
@@ -209,4 +213,6 @@ export default function Calculator() {
     </div>
   );
 }
+
+
 
