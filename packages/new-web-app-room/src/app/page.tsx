@@ -2,211 +2,143 @@
 
 import { useState } from 'react';
 
-export default function Calculator() {
-  const [display, setDisplay] = useState('0');
-  const [previousValue, setPreviousValue] = useState<number | null>(null);
-  const [operation, setOperation] = useState<string | null>(null);
-  const [waitingForOperand, setWaitingForOperand] = useState(false);
+interface Todo {
+  id: number;
+  text: string;
+  completed: boolean;
+}
 
-  const inputNumber = (num: string) => {
-    if (waitingForOperand) {
-      setDisplay(num);
-      setWaitingForOperand(false);
-    } else {
-      setDisplay(display === '0' ? num : display + num);
+export default function TodoList() {
+  const [todos, setTodos] = useState<Todo[]>([]);
+  const [inputText, setInputText] = useState('');
+
+  const addTodo = () => {
+    if (inputText.trim() !== '') {
+      const newTodo: Todo = {
+        id: Date.now(),
+        text: inputText.trim(),
+        completed: false
+      };
+      setTodos([...todos, newTodo]);
+      setInputText('');
     }
   };
 
-  const inputOperation = (nextOperation: string) => {
-    const inputValue = parseFloat(display);
-
-    if (previousValue === null) {
-      setPreviousValue(inputValue);
-    } else if (operation) {
-      const currentValue = previousValue || 0;
-      const newValue = calculate(currentValue, inputValue, operation);
-
-      setDisplay(String(newValue));
-      setPreviousValue(newValue);
-    }
-
-    setWaitingForOperand(true);
-    setOperation(nextOperation);
+  const toggleTodo = (id: number) => {
+    setTodos(todos.map(todo =>
+      todo.id === id ? { ...todo, completed: !todo.completed } : todo
+    ));
   };
 
-  const calculate = (firstValue: number, secondValue: number, operation: string) => {
-    switch (operation) {
-      case '+':
-        return firstValue + secondValue;
-      case '-':
-        return firstValue - secondValue;
-      case '×':
-        return firstValue * secondValue;
-      case '÷':
-        return firstValue / secondValue;
-      case '=':
-        return secondValue;
-      default:
-        return secondValue;
-    }
+  const deleteTodo = (id: number) => {
+    setTodos(todos.filter(todo => todo.id !== id));
   };
 
-  const performCalculation = () => {
-    const inputValue = parseFloat(display);
-
-    if (previousValue !== null && operation) {
-      const newValue = calculate(previousValue, inputValue, operation);
-      setDisplay(String(newValue));
-      setPreviousValue(null);
-      setOperation(null);
-      setWaitingForOperand(true);
-    }
+  const clearCompleted = () => {
+    setTodos(todos.filter(todo => !todo.completed));
   };
 
-  const clear = () => {
-    setDisplay('0');
-    setPreviousValue(null);
-    setOperation(null);
-    setWaitingForOperand(false);
-  };
+  const completedCount = todos.filter(todo => todo.completed).length;
+  const totalCount = todos.length;
 
-  const inputDecimal = () => {
-    if (waitingForOperand) {
-      setDisplay('0.');
-      setWaitingForOperand(false);
-    } else if (display.indexOf('.') === -1) {
-      setDisplay(display + '.');
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      addTodo();
     }
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 flex items-center justify-center p-4">
-      <div className="bg-gray-900 rounded-2xl shadow-2xl p-6 w-full max-w-sm">
-        <h1 className="text-white text-2xl font-bold text-center mb-6">Calculator</h1>
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 to-gray-800 py-8 px-4">
+      <div className="max-w-md mx-auto bg-gray-800 rounded-xl shadow-2xl p-6 border border-gray-700">
+        <h1 className="text-3xl font-bold text-white mb-6 text-center">
+          Todo List
+        </h1>
         
-        {/* Display */}
-        <div className="bg-black rounded-lg p-4 mb-4">
-          <div className="text-white text-right text-3xl font-mono overflow-hidden">
-            {display}
+        {/* Add Todo Input */}
+        <div className="flex gap-2 mb-6">
+          <input
+            type="text"
+            value={inputText}
+            onChange={(e) => setInputText(e.target.value)}
+            onKeyPress={handleKeyPress}
+            placeholder="Add a new task..."
+            className="flex-1 px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          />
+          <button
+            onClick={addTodo}
+            className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            Add
+          </button>
+        </div>
+
+        {/* Todo List */}
+        <div className="space-y-2 mb-6">
+          {todos.length === 0 ? (
+            <p className="text-gray-400 text-center py-8">
+              No tasks yet. Add one above!
+            </p>
+          ) : (
+            todos.map(todo => (
+              <div
+                key={todo.id}
+                className={`flex items-center gap-3 p-3 bg-gray-700 rounded-lg border border-gray-600 ${
+                  todo.completed ? 'opacity-75' : ''
+                }`}
+              >
+                <button
+                  onClick={() => toggleTodo(todo.id)}
+                  className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors ${
+                    todo.completed
+                      ? 'bg-green-500 border-green-500 text-white'
+                      : 'border-gray-400 hover:border-green-400'
+                  }`}
+                >
+                  {todo.completed && (
+                    <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                    </svg>
+                  )}
+                </button>
+                <span
+                  className={`flex-1 text-white ${
+                    todo.completed ? 'line-through text-gray-400' : ''
+                  }`}
+                >
+                  {todo.text}
+                </span>
+                <button
+                  onClick={() => deleteTodo(todo.id)}
+                  className="w-8 h-8 text-red-400 hover:text-red-300 hover:bg-red-900/20 rounded-full flex items-center justify-center transition-colors"
+                >
+                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+                  </svg>
+                </button>
+              </div>
+            ))
+          )}
+        </div>
+
+        {/* Stats and Actions */}
+        {todos.length > 0 && (
+          <div className="flex justify-between items-center text-sm text-gray-400 border-t border-gray-700 pt-4">
+            <span>
+              {completedCount} of {totalCount} completed
+            </span>
+            {completedCount > 0 && (
+              <button
+                onClick={clearCompleted}
+                className="text-red-400 hover:text-red-300 transition-colors"
+              >
+                Clear completed
+              </button>
+            )}
           </div>
-        </div>
-
-        {/* Button Grid */}
-        <div className="grid grid-cols-4 gap-3">
-          {/* Row 1 */}
-          <button
-            onClick={clear}
-            className="col-span-2 bg-gray-600 hover:bg-gray-500 text-white font-semibold py-4 px-4 rounded-lg transition-colors"
-          >
-            Clear
-          </button>
-          <button
-            onClick={() => inputOperation('÷')}
-            className="bg-orange-500 hover:bg-orange-400 text-white font-semibold py-4 px-4 rounded-lg transition-colors"
-          >
-            ÷
-          </button>
-          <button
-            onClick={() => inputOperation('×')}
-            className="bg-orange-500 hover:bg-orange-400 text-white font-semibold py-4 px-4 rounded-lg transition-colors"
-          >
-            ×
-          </button>
-
-          {/* Row 2 */}
-          <button
-            onClick={() => inputNumber('7')}
-            className="bg-gray-700 hover:bg-gray-600 text-white font-semibold py-4 px-4 rounded-lg transition-colors"
-          >
-            7
-          </button>
-          <button
-            onClick={() => inputNumber('8')}
-            className="bg-gray-700 hover:bg-gray-600 text-white font-semibold py-4 px-4 rounded-lg transition-colors"
-          >
-            8
-          </button>
-          <button
-            onClick={() => inputNumber('9')}
-            className="bg-gray-700 hover:bg-gray-600 text-white font-semibold py-4 px-4 rounded-lg transition-colors"
-          >
-            9
-          </button>
-          <button
-            onClick={() => inputOperation('-')}
-            className="bg-orange-500 hover:bg-orange-400 text-white font-semibold py-4 px-4 rounded-lg transition-colors"
-          >
-            -
-          </button>
-
-          {/* Row 3 */}
-          <button
-            onClick={() => inputNumber('4')}
-            className="bg-gray-700 hover:bg-gray-600 text-white font-semibold py-4 px-4 rounded-lg transition-colors"
-          >
-            4
-          </button>
-          <button
-            onClick={() => inputNumber('5')}
-            className="bg-gray-700 hover:bg-gray-600 text-white font-semibold py-4 px-4 rounded-lg transition-colors"
-          >
-            5
-          </button>
-          <button
-            onClick={() => inputNumber('6')}
-            className="bg-gray-700 hover:bg-gray-600 text-white font-semibold py-4 px-4 rounded-lg transition-colors"
-          >
-            6
-          </button>
-          <button
-            onClick={() => inputOperation('+')}
-            className="bg-orange-500 hover:bg-orange-400 text-white font-semibold py-4 px-4 rounded-lg transition-colors"
-          >
-            +
-          </button>
-
-          {/* Row 4 */}
-          <button
-            onClick={() => inputNumber('1')}
-            className="bg-gray-700 hover:bg-gray-600 text-white font-semibold py-4 px-4 rounded-lg transition-colors"
-          >
-            1
-          </button>
-          <button
-            onClick={() => inputNumber('2')}
-            className="bg-gray-700 hover:bg-gray-600 text-white font-semibold py-4 px-4 rounded-lg transition-colors"
-          >
-            2
-          </button>
-          <button
-            onClick={() => inputNumber('3')}
-            className="bg-gray-700 hover:bg-gray-600 text-white font-semibold py-4 px-4 rounded-lg transition-colors"
-          >
-            3
-          </button>
-          <button
-            onClick={performCalculation}
-            className="row-span-2 bg-orange-500 hover:bg-orange-400 text-white font-semibold py-4 px-4 rounded-lg transition-colors"
-          >
-            =
-          </button>
-
-          {/* Row 5 */}
-          <button
-            onClick={() => inputNumber('0')}
-            className="col-span-2 bg-gray-700 hover:bg-gray-600 text-white font-semibold py-4 px-4 rounded-lg transition-colors"
-          >
-            0
-          </button>
-          <button
-            onClick={inputDecimal}
-            className="bg-gray-700 hover:bg-gray-600 text-white font-semibold py-4 px-4 rounded-lg transition-colors"
-          >
-            .
-          </button>
-        </div>
+        )}
       </div>
     </div>
   );
 }
+
 
